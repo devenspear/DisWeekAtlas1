@@ -31,7 +31,7 @@ export default function AdminPage() {
       const data = await res.json()
       setLog(JSON.stringify(data, null, 2))
       if (data.success) {
-        loadJobHistory() // Refresh job history
+        loadJobHistory()
       }
     } catch (error) {
       setLog('Error: ' + (error instanceof Error ? error.message : 'Unknown error'))
@@ -66,7 +66,6 @@ export default function AdminPage() {
 
   const loadJobHistory = async () => {
     try {
-      // This would need a new API endpoint to fetch job history
       const res = await fetch('/api/admin/jobs')
       if (res.ok) {
         const data = await res.json()
@@ -77,7 +76,6 @@ export default function AdminPage() {
     }
   }
 
-  // SQL Console functions
   const executeQuery = async () => {
     if (!sql.trim()) return
     
@@ -122,13 +120,12 @@ export default function AdminPage() {
       <div className="rounded-2xl p-6 bg-zinc-900/60 border border-zinc-800">
         <h1 className="text-2xl font-bold mb-6">Admin Dashboard</h1>
         
-        {/* Content Ingestion */}
         <section className="mb-8">
           <h2 className="text-xl font-semibold mb-4">📥 Content Ingestion</h2>
           <div className="flex gap-2 mb-4">
             <select 
               value={mode} 
-              onChange={e=>setMode(e.target.value as any)} 
+              onChange={e => setMode(e.target.value as any)} 
               className="rounded-lg bg-zinc-900 border border-zinc-700 px-3 py-2 text-white"
             >
               <option value="weekly">Weekly (latest issue only)</option>
@@ -143,12 +140,11 @@ export default function AdminPage() {
             </button>
           </div>
           <p className="text-sm text-zinc-400 mb-4">
-            <strong>Weekly:</strong> Import only the latest Friday's content from Google Doc<br/>
+            <strong>Weekly:</strong> Import only the latest Friday content from Google Doc<br/>
             <strong>Backfill:</strong> Import all historical Friday issues (use for initial setup or recovery)
           </p>
         </section>
 
-        {/* Database Management */}
         <section className="mb-8">
           <h2 className="text-xl font-semibold mb-4">💾 Database Management</h2>
           <div className="flex gap-2 mb-4">
@@ -180,11 +176,9 @@ export default function AdminPage() {
           )}
         </section>
 
-        {/* SQL Debug Console */}
         <section className="mb-8">
           <h2 className="text-xl font-semibold mb-4">🔧 SQL Debug Console</h2>
           
-          {/* Preset Queries */}
           <div className="mb-4">
             <h3 className="text-sm font-medium mb-2">Quick Queries:</h3>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
@@ -205,7 +199,7 @@ export default function AdminPage() {
               </button>
               
               <button
-                onClick={() => setPresetQuery('SELECT a.title, i."issueDate", a."sourceUrl" FROM "Article" a JOIN "Issue" i ON a."issueId" = i.id WHERE LOWER(a.title) LIKE \'%unitree%\' ORDER BY i."issueDate" DESC')}
+                onClick={() => setPresetQuery("SELECT a.title, i.\"issueDate\", a.\"sourceUrl\" FROM \"Article\" a JOIN \"Issue\" i ON a.\"issueId\" = i.id WHERE LOWER(a.title) LIKE '%unitree%' ORDER BY i.\"issueDate\" DESC")}
                 className="text-left p-2 bg-zinc-800 hover:bg-zinc-700 rounded text-xs transition-colors"
               >
                 <div className="font-medium">Search Unitree</div>
@@ -217,12 +211,11 @@ export default function AdminPage() {
                 className="text-left p-2 bg-zinc-800 hover:bg-zinc-700 rounded text-xs transition-colors"
               >
                 <div className="font-medium">Article Stats</div>
-                <div className="text-zinc-400">Total & unique</div>
+                <div className="text-zinc-400">Total &amp; unique</div>
               </button>
             </div>
           </div>
 
-          {/* SQL Input */}
           <div className="space-y-3">
             <div>
               <label className="block text-sm font-medium mb-2">SQL Query:</label>
@@ -250,14 +243,12 @@ export default function AdminPage() {
             </button>
           </div>
 
-          {/* Error Display */}
           {sqlError && (
             <div className="mt-4 bg-red-900/20 border border-red-700 rounded-lg p-3 text-red-300 text-sm">
               <strong>Query Error:</strong> {sqlError}
             </div>
           )}
 
-          {/* Results Display */}
           {sqlResult && (
             <div className="mt-4 space-y-3">
               <div className="flex items-center gap-4 text-sm text-zinc-400">
@@ -279,7 +270,6 @@ export default function AdminPage() {
           )}
         </section>
 
-        {/* Job History */}
         <section className="mb-8">
           <h2 className="text-xl font-semibold mb-4">📋 Recent Job History</h2>
           {jobHistory.length > 0 ? (
@@ -323,7 +313,6 @@ export default function AdminPage() {
           )}
         </section>
 
-        {/* System Links */}
         <section className="mb-8">
           <h2 className="text-xl font-semibold mb-4">🔗 Quick Links</h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -354,7 +343,6 @@ export default function AdminPage() {
           </div>
         </section>
 
-        {/* Output Log */}
         {log && (
           <section>
             <h2 className="text-xl font-semibold mb-4">📝 Output Log</h2>
