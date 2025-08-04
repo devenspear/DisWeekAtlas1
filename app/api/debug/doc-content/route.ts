@@ -33,11 +33,13 @@ export async function GET(req: NextRequest) {
     }
     
     // Try the parsing function
-    let parsedIssues = []
+    let parsedIssues: any[] = []
+    let parseError: string | null = null
     try {
       parsedIssues = splitIssuesByFriday(text)
     } catch (error) {
-      parsedIssues = [`Parse error: ${error}`]
+      parseError = `Parse error: ${error}`
+      parsedIssues = []
     }
     
     // Look for any date-like patterns
@@ -68,12 +70,13 @@ export async function GET(req: NextRequest) {
       contentLength: text.length,
       preview: preview,
       fridayMatches: fridayMatches,
-      parsedIssuesCount: Array.isArray(parsedIssues) ? parsedIssues.length : 0,
-      parsedIssues: Array.isArray(parsedIssues) ? parsedIssues.map(issue => ({
+      parsedIssuesCount: parsedIssues.length,
+      parsedIssues: parsedIssues.map(issue => ({
         date: issue.dateISO,
         blockLength: issue.block.length,
         blockPreview: issue.block.substring(0, 200)
-      })) : parsedIssues,
+      })),
+      parseError: parseError,
       datePatterns: datePatterns.slice(0, 10),
       expectedFormat: "The parser expects lines like: 'Friday, August 4, 2025'",
       firstFewLines: lines.slice(0, 20)
