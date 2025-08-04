@@ -50,7 +50,9 @@ export async function GET(req: NextRequest) {
     const preview = text.substring(0, 2000)
     
     // Try all date patterns including historical variations
+    // Note: Google Docs escapes > as \u003E, so we need to handle both
     const ISSUE_DATE_PATTERNS = [
+      /^DISRUPTION\s+WEEKLY\s*\\u003E\s*([A-Za-z]+\s+\d{1,2},\s*\d{4})/mi,
       /^DISRUPTION\s+WEEKLY\s*>\s*([A-Za-z]+\s+\d{1,2},\s*\d{4})/mi,
       /^DISRUPTION\s+WEEKLY\s*[-–—>]\s*([A-Za-z]+\s+\d{1,2},\s*\d{4})/mi,
       /^DISRUPTION\s+WEEKLY\s+([A-Za-z]+\s+\d{1,2},\s*\d{4})/mi,

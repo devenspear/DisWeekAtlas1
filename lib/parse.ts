@@ -19,7 +19,10 @@ export type ParsedIssue = {
 }
 
 // Multiple regex patterns to handle formatting variations across 2+ years of content
+// Note: Google Docs escapes > as \u003E, so we need to handle both
 const ISSUE_DATE_PATTERNS = [
+  // Current format with Unicode escape: "DISRUPTION WEEKLY \\u003E Month day, year"  
+  /^DISRUPTION\s+WEEKLY\s*\\u003E\s*([A-Za-z]+\s+\d{1,2},\s*\d{4})/mi,
   // Current format: "DISRUPTION WEEKLY  >  Month day, year" (flexible spacing)
   /^DISRUPTION\s+WEEKLY\s*>\s*([A-Za-z]+\s+\d{1,2},\s*\d{4})/mi,
   // Older possible formats with various spacing and punctuation
