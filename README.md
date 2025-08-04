@@ -48,3 +48,4 @@ This repo expects a **Service Account** with the target Doc **shared** to the SA
 - You can harden the parser with `Docs API structural elements` later; this starter uses `Drive files.export` for simplicity.
 
 MIT License – Use freely.
+# Force deploy
