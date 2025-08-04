@@ -18,7 +18,7 @@ export async function GET(req: NextRequest) {
     `
 
     // Check actual data samples
-    const dataSamples = {}
+    const dataSamples: Record<string, any> = {}
     
     try {
       dataSamples.issue = await db.$queryRaw`SELECT * FROM "Issue" LIMIT 2`
@@ -39,7 +39,7 @@ export async function GET(req: NextRequest) {
     }
 
     // Try different case variations
-    const caseTests = {}
+    const caseTests: Record<string, any> = {}
     
     try {
       caseTests.upperCase = await db.$queryRaw`SELECT COUNT(*)::int as count FROM "Issue"`
