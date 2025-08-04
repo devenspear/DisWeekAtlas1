@@ -2,7 +2,33 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 
 export async function GET(req: NextRequest) {
-  const results = {
+  const results: {
+    timestamp: string
+    environment: {
+      nodeEnv: string | undefined
+      hasGoogleDocId: boolean
+      hasGoogleBase64: boolean
+      hasDatabaseUrl: boolean
+      googleDocId: string | undefined
+    }
+    database: {
+      connected: boolean
+      tables: any
+      counts: Record<string, any>
+      samples: Record<string, any>
+      schema: any
+      errors: string[]
+      rawVerification?: any
+    }
+    ingestion: {
+      totalJobs: number
+      successfulJobs: number
+      failedJobs: number
+      recentJobs: any[]
+      lastSuccessfulIngestion: Date | null
+      errors: string[]
+    }
+  } = {
     timestamp: new Date().toISOString(),
     environment: {
       nodeEnv: process.env.NODE_ENV,
