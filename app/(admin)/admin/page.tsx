@@ -223,7 +223,7 @@ export default function AdminPage() {
                 value={sql}
                 onChange={(e) => setSql(e.target.value)}
                 className="w-full h-24 p-3 bg-zinc-800 border border-zinc-700 rounded-lg font-mono text-sm resize-none focus:border-zinc-600 focus:outline-none"
-                placeholder="SELECT * FROM \"Issue\" LIMIT 10"
+                placeholder='SELECT * FROM "Issue" LIMIT 10'
               />
             </div>
             
