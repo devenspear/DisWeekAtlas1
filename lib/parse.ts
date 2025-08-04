@@ -18,7 +18,8 @@ export type ParsedIssue = {
   }>
 }
 
-const FRIDAY_REGEX = /^(Friday,\s*[A-Za-z]+\s+\d{1,2},\s*\d{4})$/mi
+// Updated to match "DISRUPTION WEEKLY > [Date]" format from your Google Doc
+const ISSUE_DATE_REGEX = /^DISRUPTION\s+WEEKLY\s*>\s*([A-Za-z]+\s+\d{1,2},\s*\d{4})/mi
 
 function normalizeDateToISO(dateStr: string) {
   const d = new Date(dateStr)
@@ -32,8 +33,9 @@ export function splitIssuesByFriday(text: string): Array<{ dateISO: string, bloc
   const indices: Array<{idx: number, dateISO: string}> = []
   for (let i=0;i<lines.length;i++) {
     const line = lines[i].trim()
-    const m = line.match(FRIDAY_REGEX)
+    const m = line.match(ISSUE_DATE_REGEX)
     if (m) {
+      console.log(`🔍 Found issue date: "${m[1]}" on line ${i + 1}`)
       indices.push({ idx: i, dateISO: normalizeDateToISO(m[1]) })
     }
   }
