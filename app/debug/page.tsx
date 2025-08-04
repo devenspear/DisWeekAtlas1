@@ -51,11 +51,11 @@ export default function DebugPage() {
     },
     { 
       label: 'Search Unitree', 
-      sql: 'SELECT a.title, i."issueDate", a."sourceUrl" FROM "Article" a JOIN "Issue" i ON a."issueId" = i.id WHERE LOWER(a.title) LIKE \'%unitree%\' ORDER BY i."issueDate" DESC' 
+      sql: "SELECT a.title, i.\"issueDate\", a.\"sourceUrl\" FROM \"Article\" a JOIN \"Issue\" i ON a.\"issueId\" = i.id WHERE LOWER(a.title) LIKE '%unitree%' ORDER BY i.\"issueDate\" DESC" 
     },
     { 
       label: 'Missing Recent Weeks', 
-      sql: 'SELECT "issueDate" FROM "Issue" WHERE "issueDate" >= \'2025-06-01\' ORDER BY "issueDate" DESC' 
+      sql: "SELECT \"issueDate\" FROM \"Issue\" WHERE \"issueDate\" >= '2025-06-01' ORDER BY \"issueDate\" DESC" 
     }
   ]
 
