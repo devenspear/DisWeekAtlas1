@@ -63,14 +63,20 @@ export async function POST(req: NextRequest) {
     optimizations.push(`✅ Removed ${duplicateCleanup} duplicate articles`)
     
     // 4. Get current database stats
-    const stats = await db.$queryRaw`
+    const statsResult = await db.$queryRaw`
       SELECT 
-        (SELECT COUNT(*) FROM "Article") as total_articles,
-        (SELECT COUNT(*) FROM "Issue") as total_issues,
-        (SELECT COUNT(DISTINCT "sourceUrl") FROM "Article") as unique_urls,
+        (SELECT COUNT(*)::int FROM "Article") as total_articles,
+        (SELECT COUNT(*)::int FROM "Issue") as total_issues,
+        (SELECT COUNT(DISTINCT "sourceUrl")::int FROM "Article") as unique_urls,
         (SELECT MAX("issueDate") FROM "Issue") as latest_issue,
         (SELECT MIN("issueDate") FROM "Issue") as earliest_issue
-    `
+    ` as Array<{
+      total_articles: number
+      total_issues: number  
+      unique_urls: number
+      latest_issue: Date
+      earliest_issue: Date
+    }>
     
     console.log('✅ Database optimization completed')
     
@@ -78,7 +84,7 @@ export async function POST(req: NextRequest) {
       success: true,
       message: 'Database optimization completed',
       optimizations,
-      stats: stats[0] || {},
+      stats: statsResult[0] || {},
       recommendations: [
         'Search should now be significantly faster',
         'Duplicate articles have been removed',
