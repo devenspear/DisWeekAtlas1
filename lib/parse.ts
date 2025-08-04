@@ -18,8 +18,19 @@ export type ParsedIssue = {
   }>
 }
 
-// Updated to match "DISRUPTION WEEKLY > [Date]" format from your Google Doc
-const ISSUE_DATE_REGEX = /^DISRUPTION\s+WEEKLY\s*>\s*([A-Za-z]+\s+\d{1,2},\s*\d{4})/mi
+// Multiple regex patterns to handle formatting variations across 2+ years of content
+const ISSUE_DATE_PATTERNS = [
+  // Current format: "DISRUPTION WEEKLY  >  Month day, year" (flexible spacing)
+  /^DISRUPTION\s+WEEKLY\s*>\s*([A-Za-z]+\s+\d{1,2},\s*\d{4})/mi,
+  // Older possible formats with various spacing and punctuation
+  /^DISRUPTION\s+WEEKLY\s*[-–—>]\s*([A-Za-z]+\s+\d{1,2},\s*\d{4})/mi,
+  // Without separator
+  /^DISRUPTION\s+WEEKLY\s+([A-Za-z]+\s+\d{1,2},\s*\d{4})/mi,
+  // With extra text before date
+  /^DISRUPTION\s+WEEKLY.*?([A-Za-z]+\s+\d{1,2},\s*\d{4})/mi,
+  // Date-only patterns (fallback for very different formatting)
+  /^([A-Za-z]+\s+\d{1,2},\s*\d{4})\s*$/mi
+]
 
 function normalizeDateToISO(dateStr: string) {
   const d = new Date(dateStr)
@@ -31,12 +42,27 @@ function normalizeDateToISO(dateStr: string) {
 export function splitIssuesByFriday(text: string): Array<{ dateISO: string, block: string }> {
   const lines = text.split(/\r?\n/)
   const indices: Array<{idx: number, dateISO: string}> = []
-  for (let i=0;i<lines.length;i++) {
+  
+  for (let i = 0; i < lines.length; i++) {
     const line = lines[i].trim()
-    const m = line.match(ISSUE_DATE_REGEX)
-    if (m) {
-      console.log(`🔍 Found issue date: "${m[1]}" on line ${i + 1}`)
-      indices.push({ idx: i, dateISO: normalizeDateToISO(m[1]) })
+    
+    // Try each pattern until one matches
+    for (let patternIndex = 0; patternIndex < ISSUE_DATE_PATTERNS.length; patternIndex++) {
+      const pattern = ISSUE_DATE_PATTERNS[patternIndex]
+      const match = line.match(pattern)
+      
+      if (match && match[1]) {
+        try {
+          const dateStr = match[1].trim()
+          const dateISO = normalizeDateToISO(dateStr)
+          console.log(`🔍 Found issue date: "${dateStr}" on line ${i + 1} (pattern ${patternIndex + 1})`)
+          indices.push({ idx: i, dateISO })
+          break // Found a match, stop trying other patterns for this line
+        } catch (error) {
+          console.log(`⚠️ Date parse failed for "${match[1]}" on line ${i + 1}: ${error}`)
+          continue // Try next pattern
+        }
+      }
     }
   }
   indices.sort((a,b)=>a.idx-b.idx)
