@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 
+// Disable static generation for this fix endpoint
+export const dynamic = 'force-dynamic'
+
 export async function POST(req: NextRequest) {
   try {
     console.log('🔧 Starting schema fix...')

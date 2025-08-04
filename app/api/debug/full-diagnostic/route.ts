@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 
+// Disable static generation for this diagnostic endpoint
+export const dynamic = 'force-dynamic'
+
 export async function GET(req: NextRequest) {
   const results: {
     timestamp: string
