@@ -64,7 +64,7 @@ export async function GET(req: NextRequest) {
       SELECT 
         a."sourceUrl",
         COUNT(*)::int as count,
-        ARRAY_AGG(DISTINCT i."issueDate"::text ORDER BY i."issueDate" DESC) as dates,
+        ARRAY_AGG(DISTINCT i."issueDate"::text) as dates,
         ARRAY_AGG(DISTINCT a.title) as titles
       FROM "Article" a
       JOIN "Issue" i ON a."issueId" = i.id
