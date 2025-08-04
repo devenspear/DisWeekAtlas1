@@ -2,9 +2,17 @@
 
 import { useState } from 'react'
 
+type QueryResult = {
+  success: boolean
+  data: any[]
+  executionTime: string
+  rowCount: number
+  error?: string
+}
+
 export default function DebugPage() {
   const [sql, setSql] = useState('SELECT COUNT(*) as total_articles FROM "Article"')
-  const [result, setResult] = useState<any>(null)
+  const [result, setResult] = useState<QueryResult | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -36,28 +44,9 @@ export default function DebugPage() {
     }
   }
 
-  const presetQueries = [
-    { 
-      label: 'Issue Count', 
-      sql: 'SELECT COUNT(*) as issue_count FROM "Issue"' 
-    },
-    { 
-      label: 'Recent Issues', 
-      sql: 'SELECT "issueDate", "subjectLine" FROM "Issue" ORDER BY "issueDate" DESC LIMIT 10' 
-    },
-    { 
-      label: 'Article Distribution', 
-      sql: 'SELECT COUNT(*) as articles, i."issueDate" FROM "Article" a JOIN "Issue" i ON a."issueId" = i.id GROUP BY i."issueDate" ORDER BY i."issueDate" DESC LIMIT 20' 
-    },
-    { 
-      label: 'Search Unitree', 
-      sql: "SELECT a.title, i.\"issueDate\", a.\"sourceUrl\" FROM \"Article\" a JOIN \"Issue\" i ON a.\"issueId\" = i.id WHERE LOWER(a.title) LIKE '%unitree%' ORDER BY i.\"issueDate\" DESC" 
-    },
-    { 
-      label: 'Missing Recent Weeks', 
-      sql: "SELECT \"issueDate\" FROM \"Issue\" WHERE \"issueDate\" >= '2025-06-01' ORDER BY \"issueDate\" DESC" 
-    }
-  ]
+  const setPresetQuery = (query: string) => {
+    setSql(query)
+  }
 
   return (
     <main className="max-w-6xl mx-auto p-6 space-y-6">
@@ -68,24 +57,35 @@ export default function DebugPage() {
         </p>
       </div>
 
-      {/* Preset Queries */}
       <div className="space-y-3">
         <h2 className="text-lg font-semibold">Quick Queries</h2>
         <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-          {presetQueries.map((preset, i) => (
-            <button
-              key={i}
-              onClick={() => setSql(preset.sql)}
-              className="text-left p-3 bg-zinc-800 hover:bg-zinc-700 rounded-lg text-sm transition-colors"
-            >
-              <div className="font-medium">{preset.label}</div>
-              <div className="text-zinc-400 text-xs mt-1 truncate">{preset.sql.substring(0, 40)}...</div>
-            </button>
-          ))}
+          <button
+            onClick={() => setPresetQuery('SELECT COUNT(*) as issue_count FROM "Issue"')}
+            className="text-left p-3 bg-zinc-800 hover:bg-zinc-700 rounded-lg text-sm transition-colors"
+          >
+            <div className="font-medium">Issue Count</div>
+            <div className="text-zinc-400 text-xs mt-1">Count all newsletters</div>
+          </button>
+          
+          <button
+            onClick={() => setPresetQuery('SELECT "issueDate", "subjectLine" FROM "Issue" ORDER BY "issueDate" DESC LIMIT 10')}
+            className="text-left p-3 bg-zinc-800 hover:bg-zinc-700 rounded-lg text-sm transition-colors"
+          >
+            <div className="font-medium">Recent Issues</div>
+            <div className="text-zinc-400 text-xs mt-1">Latest 10 newsletters</div>
+          </button>
+          
+          <button
+            onClick={() => setPresetQuery('SELECT a.title, i."issueDate", a."sourceUrl" FROM "Article" a JOIN "Issue" i ON a."issueId" = i.id WHERE LOWER(a.title) LIKE \'%unitree%\' ORDER BY i."issueDate" DESC')}
+            className="text-left p-3 bg-zinc-800 hover:bg-zinc-700 rounded-lg text-sm transition-colors"
+          >
+            <div className="font-medium">Search Unitree</div>
+            <div className="text-zinc-400 text-xs mt-1">Find Unitree articles</div>
+          </button>
         </div>
       </div>
 
-      {/* SQL Input */}
       <div className="space-y-4">
         <div className="space-y-2">
           <label className="text-sm font-medium">SQL Query</label>
@@ -93,7 +93,7 @@ export default function DebugPage() {
             value={sql}
             onChange={e => setSql(e.target.value)}
             className="w-full h-32 p-3 bg-zinc-900 border border-zinc-700 rounded-lg font-mono text-sm resize-none focus:border-zinc-500 focus:outline-none"
-            placeholder="SELECT * FROM "Issue" LIMIT 10"
+            placeholder="SELECT * FROM \"Issue\" LIMIT 10"
           />
         </div>
         
@@ -113,14 +113,12 @@ export default function DebugPage() {
         </button>
       </div>
 
-      {/* Error Display */}
       {error && (
         <div className="bg-red-900/20 border border-red-700 rounded-lg p-4 text-red-300">
           <strong>Error:</strong> {error}
         </div>
       )}
 
-      {/* Results */}
       {result && (
         <div className="space-y-4">
           <div className="flex items-center gap-4 text-sm text-zinc-400">
