@@ -40,12 +40,17 @@ export async function POST(req: NextRequest) {
     
     console.log(`✅ Query executed in ${executionTime}ms`)
     
+    // Convert BigInt to string for JSON serialization
+    const serializedResult = JSON.parse(JSON.stringify(result, (key, value) =>
+      typeof value === 'bigint' ? value.toString() : value
+    ))
+
     return NextResponse.json({
       success: true,
       query: sql,
       executionTime: `${executionTime}ms`,
       rowCount: Array.isArray(result) ? result.length : 1,
-      data: result
+      data: serializedResult
     })
     
   } catch (error) {

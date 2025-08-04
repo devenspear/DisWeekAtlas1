@@ -78,12 +78,12 @@ export async function GET(req: NextRequest) {
         EXTRACT(YEAR FROM "issueDate")::int as year,
         EXTRACT(MONTH FROM "issueDate")::int as month,
         COUNT(*)::int as issue_count,
-        MIN("issueDate") as first_issue,
-        MAX("issueDate") as last_issue
+        MIN("issueDate")::date as first_issue,
+        MAX("issueDate")::date as last_issue
       FROM "Issue"
       GROUP BY EXTRACT(YEAR FROM "issueDate"), EXTRACT(MONTH FROM "issueDate")
       ORDER BY year DESC, month DESC
-    `
+    ` as Array<{ year: number; month: number; issue_count: number; first_issue: Date; last_issue: Date }>
     
     // 5. Check for duplicate dates
     const duplicateDates = await db.$queryRaw`
@@ -118,9 +118,14 @@ export async function GET(req: NextRequest) {
       }
     }
     
+    // Serialize BigInt values for JSON response
+    const serializeData = (data: any) => JSON.parse(JSON.stringify(data, (key, value) =>
+      typeof value === 'bigint' ? value.toString() : value
+    ))
+
     return NextResponse.json({
       success: true,
-      coverage: {
+      coverage: serializeData({
         summary: {
           totalIssuesInDatabase: totalIssues,
           expectedApproximate: expectedWeeks,
@@ -144,13 +149,13 @@ export async function GET(req: NextRequest) {
           duplicateDates: duplicateDates,
           issuesWithoutArticles: allIssues.filter(i => i._count.articles === 0).length
         }
-      },
-      detailedIssues: allIssues.map(issue => ({
+      }),
+      detailedIssues: serializeData(allIssues.map(issue => ({
         date: issue.issueDate.toISOString().split('T')[0],
         subjectLine: issue.subjectLine || 'No subject',
         articleCount: issue._count.articles
-      })),
-      missingWeeks: weeklyGaps,
+      }))),
+      missingWeeks: serializeData(weeklyGaps),
       recommendations: [
         totalIssues < 90 ? "⚠️ Significantly fewer than 100 issues - major ingestion problem" :
         totalIssues < 100 ? "⚠️ Missing some issues - partial ingestion problem" :
