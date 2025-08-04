@@ -1,0 +1,105 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Issue {
+  id            String   @id @default(cuid())
+  issueDate     DateTime @unique
+  subjectLine   String?
+  toplineShift  String?
+  toplineSignal String?
+  toplineWhy    String?
+  rawMarkdown   String?
+  rawHtml       String?
+  hash          String
+  articles      Article[]
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model Category {
+  id    String @id @default(cuid())
+  slug  String @unique
+  name  String @unique
+  articles Article[]
+}
+
+model Article {
+  id            String  @id @default(cuid())
+  issue         Issue   @relation(fields: [issueId], references: [id])
+  issueId       String
+  category      Category? @relation(fields: [categoryId], references: [id])
+  categoryId    String?
+  title         String
+  summaryMd     String?
+  summaryText   String?
+  sourceUrl     String
+  sourceDomain  String
+  quotedStat    String?
+  tags          ArticleTag[]
+  entities      ArticleEntity[]
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model Tag {
+  id        String @id @default(cuid())
+  slug      String @unique
+  name      String @unique
+  emergent  Boolean @default(false)
+  articles  ArticleTag[]
+}
+
+model ArticleTag {
+  articleId String
+  tagId     String
+  confidence Float?
+
+  article   Article @relation(fields: [articleId], references: [id])
+  tag       Tag     @relation(fields: [tagId], references: [id])
+
+  @@id([articleId, tagId])
+}
+
+enum EntityType {
+  COMPANY
+  PERSON
+  MODEL
+  PRODUCT
+  GEO
+}
+
+model Entity {
+  id        String     @id @default(cuid())
+  type      EntityType
+  name      String
+  normalized String?
+  articles  ArticleEntity[]
+
+  @@index([type, name])
+}
+
+model ArticleEntity {
+  articleId String
+  entityId  String
+  confidence Float?
+
+  article   Article @relation(fields: [articleId], references: [id])
+  entity    Entity  @relation(fields: [entityId], references: [id])
+
+  @@id([articleId, entityId])
+}
+
+model JobRun {
+  id        String   @id @default(cuid())
+  jobType   String
+  startedAt DateTime @default(now())
+  endedAt   DateTime?
+  status    String   // "success" | "failure"
+  error     String?
+}
