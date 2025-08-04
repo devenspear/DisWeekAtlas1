@@ -201,10 +201,10 @@ export async function GET(req: NextRequest) {
       console.log('🔬 Running raw SQL verification...')
       try {
         const rawChecks = await Promise.all([
-          db.$queryRaw`SELECT COUNT(*) as count FROM "Issue"`,
-          db.$queryRaw`SELECT COUNT(*) as count FROM "Article"`,
-          db.$queryRaw`SELECT "jobType", "status", COUNT(*) as count FROM "JobRun" GROUP BY "jobType", "status"`,
-          db.$queryRaw`SELECT "issueDate", "subjectLine", LENGTH("rawMarkdown") as markdown_length FROM "Issue" ORDER BY "issueDate" DESC LIMIT 3`
+          db.$queryRaw`SELECT COUNT(*)::int as count FROM "Issue"`,
+          db.$queryRaw`SELECT COUNT(*)::int as count FROM "Article"`,
+          db.$queryRaw`SELECT "jobType", "status", COUNT(*)::int as count FROM "JobRun" GROUP BY "jobType", "status"`,
+          db.$queryRaw`SELECT "issueDate", "subjectLine", LENGTH("rawMarkdown")::int as markdown_length FROM "Issue" ORDER BY "issueDate" DESC LIMIT 3`
         ])
         results.database.rawVerification = rawChecks
       } catch (error) {
