@@ -22,10 +22,10 @@ export async function GET(req: NextRequest) {
       },
       
       // Sample data from tables that exist
-      sampleData: {},
+      sampleData: {} as Record<string, any>,
       
       // Check table structure
-      tableExists: {}
+      tableExists: {} as any
     }
 
     // Raw SQL counts (convert to numbers)
