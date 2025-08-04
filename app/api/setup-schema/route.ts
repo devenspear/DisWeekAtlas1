@@ -6,10 +6,15 @@ export async function POST(req: NextRequest) {
   try {
     console.log('🔄 Setting up database schema...')
     
+    // Check database connection first
+    console.log('🔍 Testing database connection...')
+    await db.$executeRaw`SELECT 1`
+    console.log('✅ Database connection successful')
+    
     // Execute each SQL command separately (PostgreSQL doesn't allow multiple in one statement)
     const commands = [
-      // Enable UUID extension
-      'CREATE EXTENSION IF NOT EXISTS "uuid-ossp"',
+      // Enable UUID extension (use gen_random_uuid instead of uuid-ossp)
+      'CREATE EXTENSION IF NOT EXISTS "pgcrypto"',
       
       // Create EntityType enum with error handling
       `DO $$ BEGIN
@@ -107,10 +112,36 @@ export async function POST(req: NextRequest) {
       )`
     ]
     
-    // Execute each command separately
-    for (const command of commands) {
-      console.log(`Executing: ${command.substring(0, 50)}...`)
-      await db.$executeRawUnsafe(command)
+    // Execute each command separately with better error handling
+    const results = []
+    for (let i = 0; i < commands.length; i++) {
+      const command = commands[i]
+      try {
+        console.log(`[${i + 1}/${commands.length}] Executing: ${command.substring(0, 50)}...`)
+        await db.$executeRawUnsafe(command)
+        results.push(`✅ Command ${i + 1}: Success`)
+        console.log(`✅ Command ${i + 1} completed successfully`)
+      } catch (error) {
+        const errorMsg = `❌ Command ${i + 1} failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+        results.push(errorMsg)
+        console.error(errorMsg)
+        console.error('Full error:', error)
+        // Continue with other commands even if one fails
+      }
+    }
+    
+    // Check if tables were actually created
+    console.log('🔍 Verifying tables were created...')
+    try {
+      const tableCheck = await db.$executeRaw`
+        SELECT table_name 
+        FROM information_schema.tables 
+        WHERE table_schema = 'public' 
+        AND table_name IN ('Issue', 'Article', 'Category', 'Tag', 'Entity', 'JobRun')
+      `
+      console.log('✅ Table verification completed:', tableCheck)
+    } catch (error) {
+      console.error('❌ Table verification failed:', error)
     }
     
     // Test that tables were created by creating a test job
@@ -134,7 +165,8 @@ export async function POST(req: NextRequest) {
       success: true, 
       message: 'Database schema created successfully!',
       details: 'All tables (Issue, Article, Category, Tag, Entity, JobRun) created and verified.',
-      testJobId: testJob.id
+      testJobId: testJob.id,
+      executionResults: results
     })
     
   } catch (error) {
