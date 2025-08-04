@@ -16,6 +16,12 @@ export default function AdminPage() {
   const [loading, setLoading] = useState(false)
   const [dbStatus, setDbStatus] = useState<any>(null)
   const [jobHistory, setJobHistory] = useState<JobRun[]>([])
+  
+  // SQL Console state
+  const [sql, setSql] = useState('SELECT COUNT(*) FROM "Issue"')
+  const [sqlResult, setSqlResult] = useState<any>(null)
+  const [sqlLoading, setSqlLoading] = useState(false)
+  const [sqlError, setSqlError] = useState<string | null>(null)
 
   const runIngestion = async () => {
     setLoading(true)
@@ -69,6 +75,41 @@ export default function AdminPage() {
     } catch (error) {
       console.error('Failed to load job history:', error)
     }
+  }
+
+  // SQL Console functions
+  const executeQuery = async () => {
+    if (!sql.trim()) return
+    
+    setSqlLoading(true)
+    setSqlError(null)
+    setSqlResult(null)
+    
+    try {
+      const res = await fetch('/api/debug/sql-console', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sql: sql.trim() })
+      })
+      
+      const data = await res.json()
+      
+      if (data.success) {
+        setSqlResult(data)
+      } else {
+        setSqlError(data.error || 'Query failed')
+      }
+    } catch (err) {
+      setSqlError(err instanceof Error ? err.message : 'Request failed')
+    } finally {
+      setSqlLoading(false)
+    }
+  }
+
+  const setPresetQuery = (query: string) => {
+    setSql(query)
+    setSqlResult(null)
+    setSqlError(null)
   }
 
   useEffect(() => {
@@ -139,6 +180,105 @@ export default function AdminPage() {
           )}
         </section>
 
+        {/* SQL Debug Console */}
+        <section className="mb-8">
+          <h2 className="text-xl font-semibold mb-4">🔧 SQL Debug Console</h2>
+          
+          {/* Preset Queries */}
+          <div className="mb-4">
+            <h3 className="text-sm font-medium mb-2">Quick Queries:</h3>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+              <button
+                onClick={() => setPresetQuery('SELECT COUNT(*) as issue_count FROM "Issue"')}
+                className="text-left p-2 bg-zinc-800 hover:bg-zinc-700 rounded text-xs transition-colors"
+              >
+                <div className="font-medium">Issue Count</div>
+                <div className="text-zinc-400">Count newsletters</div>
+              </button>
+              
+              <button
+                onClick={() => setPresetQuery('SELECT "issueDate", "subjectLine" FROM "Issue" ORDER BY "issueDate" DESC LIMIT 10')}
+                className="text-left p-2 bg-zinc-800 hover:bg-zinc-700 rounded text-xs transition-colors"
+              >
+                <div className="font-medium">Recent Issues</div>
+                <div className="text-zinc-400">Latest 10</div>
+              </button>
+              
+              <button
+                onClick={() => setPresetQuery('SELECT a.title, i."issueDate", a."sourceUrl" FROM "Article" a JOIN "Issue" i ON a."issueId" = i.id WHERE LOWER(a.title) LIKE \'%unitree%\' ORDER BY i."issueDate" DESC')}
+                className="text-left p-2 bg-zinc-800 hover:bg-zinc-700 rounded text-xs transition-colors"
+              >
+                <div className="font-medium">Search Unitree</div>
+                <div className="text-zinc-400">Debug search</div>
+              </button>
+
+              <button
+                onClick={() => setPresetQuery('SELECT COUNT(*) as total_articles, COUNT(DISTINCT a."sourceUrl") as unique_urls FROM "Article" a')}
+                className="text-left p-2 bg-zinc-800 hover:bg-zinc-700 rounded text-xs transition-colors"
+              >
+                <div className="font-medium">Article Stats</div>
+                <div className="text-zinc-400">Total & unique</div>
+              </button>
+            </div>
+          </div>
+
+          {/* SQL Input */}
+          <div className="space-y-3">
+            <div>
+              <label className="block text-sm font-medium mb-2">SQL Query:</label>
+              <textarea
+                value={sql}
+                onChange={(e) => setSql(e.target.value)}
+                className="w-full h-24 p-3 bg-zinc-800 border border-zinc-700 rounded-lg font-mono text-sm resize-none focus:border-zinc-600 focus:outline-none"
+                placeholder="SELECT * FROM \"Issue\" LIMIT 10"
+              />
+            </div>
+            
+            <button
+              onClick={executeQuery}
+              disabled={sqlLoading || !sql.trim()}
+              className="px-4 py-2 bg-purple-600 hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg font-medium transition-colors flex items-center gap-2"
+            >
+              {sqlLoading ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  Executing...
+                </>
+              ) : (
+                'Execute Query'
+              )}
+            </button>
+          </div>
+
+          {/* Error Display */}
+          {sqlError && (
+            <div className="mt-4 bg-red-900/20 border border-red-700 rounded-lg p-3 text-red-300 text-sm">
+              <strong>Query Error:</strong> {sqlError}
+            </div>
+          )}
+
+          {/* Results Display */}
+          {sqlResult && (
+            <div className="mt-4 space-y-3">
+              <div className="flex items-center gap-4 text-sm text-zinc-400">
+                <span>⚡ {sqlResult.executionTime}</span>
+                <span>📊 {sqlResult.rowCount} rows</span>
+              </div>
+              
+              <div className="bg-zinc-800 border border-zinc-700 rounded-lg overflow-hidden">
+                <div className="p-3 bg-zinc-750 border-b border-zinc-700 font-medium text-sm">
+                  Query Results
+                </div>
+                <div className="p-4 overflow-auto max-h-64">
+                  <pre className="text-xs text-zinc-300">
+                    {JSON.stringify(sqlResult.data, null, 2)}
+                  </pre>
+                </div>
+              </div>
+            </div>
+          )}
+        </section>
+
         {/* Job History */}
         <section className="mb-8">
           <h2 className="text-xl font-semibold mb-4">📋 Recent Job History</h2>
@@ -198,6 +338,18 @@ export default function AdminPage() {
             </a>
             <a href="/setup" className="bg-zinc-800 hover:bg-zinc-700 p-3 rounded-lg text-center transition-colors">
               ⚙️ Initial Setup
+            </a>
+            <a href="/debug" className="bg-zinc-800 hover:bg-zinc-700 p-3 rounded-lg text-center transition-colors">
+              🔧 Debug Console
+            </a>
+            <a href="/api/debug/newsletter-coverage" target="_blank" className="bg-zinc-800 hover:bg-zinc-700 p-3 rounded-lg text-center transition-colors">
+              📊 Coverage Report
+            </a>
+            <a href="/api/debug/unitree-investigation" target="_blank" className="bg-zinc-800 hover:bg-zinc-700 p-3 rounded-lg text-center transition-colors">
+              🔍 Unitree Debug
+            </a>
+            <a href="/api/optimize-db" target="_blank" className="bg-zinc-800 hover:bg-zinc-700 p-3 rounded-lg text-center transition-colors">
+              ⚡ Optimize DB
             </a>
           </div>
         </section>
