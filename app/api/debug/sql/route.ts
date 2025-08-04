@@ -46,7 +46,7 @@ export async function GET(req: NextRequest) {
       'SELECT "issueDate", "subjectLine", "hash" FROM "Issue" ORDER BY "issueDate" DESC LIMIT 3'
     ]
     
-    const results = {}
+    const results: Record<string, any> = {}
     
     for (const query of checks) {
       try {
