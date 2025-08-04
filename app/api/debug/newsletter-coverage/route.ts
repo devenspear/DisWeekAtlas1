@@ -95,7 +95,7 @@ export async function GET(req: NextRequest) {
       GROUP BY "issueDate"::date
       HAVING COUNT(*) > 1
       ORDER BY "issueDate" DESC
-    `
+    ` as Array<{ date: string; count: number; subject_lines: string[] }>
     
     // 6. Calculate expected vs actual coverage
     const expectedWeeks = Math.ceil((new Date().getTime() - new Date('2023-08-18').getTime()) / (7 * 24 * 60 * 60 * 1000))
