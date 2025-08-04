@@ -118,7 +118,7 @@ export default function AdminPage() {
   }, [])
 
   return (
-    <main className="space-y-6">
+    <div className="space-y-6">
       <div className="rounded-2xl p-6 bg-zinc-900/60 border border-zinc-800">
         <h1 className="text-2xl font-bold mb-6">Admin Dashboard</h1>
         
@@ -364,6 +364,6 @@ export default function AdminPage() {
           </section>
         )}
       </div>
-    </main>
+    </div>
   )
 }
